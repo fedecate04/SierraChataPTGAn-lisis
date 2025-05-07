@@ -166,9 +166,10 @@ def mostrar_analisis_gas():
         "Nitrógeno": "N2", "N2": "N2"
     }
 
-    archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
-   operador = st.text_input("👤 Operador (gas)")
+      archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
+    operador = st.text_input("👤 Operador (gas)")
     obs = st.text_area("Observaciones (gas)")
+
 
     if archivo:
         try:
