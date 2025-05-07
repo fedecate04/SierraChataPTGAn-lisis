@@ -11,11 +11,52 @@ import base64
 # Configuración inicial
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 
+st.markdown("""
+    <style>
+        .stApp {
+            background-color: #0d1117;
+            color: #ffffff;
+        }
+
+        /* Contenedores tipo tarjetas */
+        .block-container {
+            padding: 2rem 1rem;
+        }
+
+        /* Bordes de neón para inputs */
+        input, textarea, .stTextInput, .stTextArea, .stNumberInput, .stSelectbox, .stDownloadButton, .stFileUploader {
+            background-color: #0d1117 !important;
+            color: white !important;
+            border: 1px solid #00f0ff !important;
+            box-shadow: 0 0 8px #00f0ff !important;
+            border-radius: 8px;
+        }
+
+        /* Para botones */
+        button {
+            background-color: #00f0ff !important;
+            color: black !important;
+            font-weight: bold;
+            border-radius: 8px;
+            box-shadow: 0 0 8px #00f0ff !important;
+        }
+
+        /* Centrar logo */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+    </style>
+""", unsafe_allow_html=True)
+
+
 # Estilos: color de fondo pastel técnico
 st.markdown("""
     <style>
         .stApp {
-           background-color: #e3ecf9;
+           background-color: #0d1117;
+;
         }
     </style>
 """, unsafe_allow_html=True)
