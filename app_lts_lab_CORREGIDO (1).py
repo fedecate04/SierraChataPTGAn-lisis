@@ -15,7 +15,7 @@ st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 st.markdown("""
     <style>
         .stApp {
-            background-color: #e0f7fa;
+           background-color: #e3ecf9;
         }
     </style>
 """, unsafe_allow_html=True)
