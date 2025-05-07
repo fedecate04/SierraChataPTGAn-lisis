@@ -6,13 +6,12 @@ from datetime import datetime
 import os
 from io import BytesIO
 
-# Configuración inicial
+# Configuración de la página
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
-LOGO_PATH = "LOGO PETROGAS.PNG"
 
-# Mostrar logo si existe
+# Logo en la cabecera (modo seguro)
 try:
-    with open(LOGO_PATH, "rb") as f:
+    with open("LOGO PETROGAS.PNG", "rb") as f:
         st.image(f, width=180)
 except FileNotFoundError:
     st.warning("⚠️ No se encontró el logo 'LOGO PETROGAS.PNG'")
@@ -26,11 +25,11 @@ Sistema profesional de análisis y validación de laboratorio con informes PDF p
 Garantizar que los fluidos cumplan con las especificaciones evita corrosión, fallas operativas y asegura la eficiencia de la planta LTS.
 """)
 
-# Sidebar
+# Opciones en barra lateral
 st.sidebar.header("⚙️ Opciones")
 activar_validaciones = st.sidebar.checkbox("Activar validación de rangos", value=True)
 
-# Parámetros por análisis
+# Configuración de parámetros por módulo
 PARAMETROS_CONFIG = {
     "MEG": [
         {"nombre": "pH", "unidad": "", "min": 6, "max": 8},
@@ -57,14 +56,15 @@ PARAMETROS_CONFIG = {
     ]
 }
 
-# Crear carpetas de informes
-for nombre in PARAMETROS_CONFIG:
-    os.makedirs(f"informes/{nombre.lower().replace(' ', '_')}", exist_ok=True)
+LOGO_PATH = "LOGO PETROGAS.PNG"
+for carpeta in PARAMETROS_CONFIG:
+    os.makedirs(f"informes/{carpeta.lower().replace(' ', '_')}", exist_ok=True)
 os.makedirs("informes/gas_natural", exist_ok=True)
 
 def limpiar_texto(texto):
     return texto.replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
 
+# Clase para PDF
 class PDF(FPDF):
     def header(self):
         if os.path.exists(LOGO_PATH):
@@ -101,6 +101,7 @@ class PDF(FPDF):
         self.multi_cell(0, 8, f"Observaciones: {limpiar_texto(texto)}")
         self.ln(3)
 
+# Validación de parámetros
 def validar_parametro(valor, minimo, maximo):
     if valor is None:
         return "—"
@@ -132,7 +133,11 @@ def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta)
 
 def formulario_analisis(nombre_modulo, parametros):
     st.subheader(f"🔬 Análisis de {nombre_modulo}")
-    st.image(LOGO_PATH, width=180)
+    try:
+        with open(LOGO_PATH, "rb") as f:
+            st.image(f, width=180)
+    except FileNotFoundError:
+        st.warning("⚠️ Logo no encontrado")
     valores = []
     for param in parametros:
         label = param["nombre"]
@@ -155,7 +160,7 @@ def formulario_analisis(nombre_modulo, parametros):
             carpeta=nombre_modulo.lower().replace(' ', '_')
         )
 
-# Módulo de análisis
+# Gestión del selector de análisis
 if "analisis_actual" not in st.session_state:
     st.session_state.analisis_actual = "-- Seleccionar --"
 
@@ -163,14 +168,20 @@ analisis_nuevo = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccio
 
 if analisis_nuevo != st.session_state.analisis_actual:
     st.session_state.analisis_actual = analisis_nuevo
-    st.experimental_rerun()
+    st.session_state.clear()
 
+# Ejecutar el formulario según el análisis
 if analisis_nuevo in PARAMETROS_CONFIG:
     formulario_analisis(analisis_nuevo, PARAMETROS_CONFIG[analisis_nuevo])
 
 elif analisis_nuevo == "Gas Natural":
     st.subheader("🛢️ Análisis de Gas Natural")
-    st.image(LOGO_PATH, width=180)
+    try:
+        with open(LOGO_PATH, "rb") as f:
+            st.image(f, width=180)
+    except FileNotFoundError:
+        st.warning("⚠️ Logo no encontrado")
+
     st.markdown("Cargá el archivo CSV generado por el cromatógrafo con la composición del gas natural.")
     archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
     operador = st.text_input("👤 Operador", key="operador_gas")
@@ -194,6 +205,7 @@ elif analisis_nuevo == "Gas Natural":
             )
         except Exception as e:
             st.error(f"Error al procesar el archivo: {e}")
+
 
 
 
