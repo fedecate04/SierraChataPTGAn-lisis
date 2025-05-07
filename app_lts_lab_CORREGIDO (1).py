@@ -152,6 +152,8 @@ def mostrar_analisis_gas():
     if archivo:
         ...
 
+       
+
         try:
             df = pd.read_csv(archivo)
             st.dataframe(df)            datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
