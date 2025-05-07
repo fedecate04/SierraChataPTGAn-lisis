@@ -5,21 +5,17 @@ from fpdf import FPDF
 from datetime import datetime
 import os
 from io import BytesIO
+from PIL import Image
 
 # Configuración de la página
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 
-# Logo en la cabecera (modo seguro)
-from PIL import Image
-
+# Mostrar logo en la cabecera
 try:
     logo = Image.open("logopetrogas.png")
-    
+    st.image(logo, width=180)
 except Exception as e:
-    st.warning("⚠️ No se pudo cargar el logo: logopetrogas.png")
-
-except FileNotFoundError:
-    st.warning("⚠️ No se encontró el logo 'logopetrogas.png'")
+    st.warning(f"⚠️ No se pudo cargar el logo: {e}")
 
 st.title("🧪 Laboratorio de Planta LTS")
 
@@ -69,7 +65,6 @@ os.makedirs("informes/gas_natural", exist_ok=True)
 def limpiar_texto(texto):
     return texto.replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
 
-# Clase para PDF
 class PDF(FPDF):
     def header(self):
         if os.path.exists(LOGO_PATH):
@@ -106,7 +101,6 @@ class PDF(FPDF):
         self.multi_cell(0, 8, f"Observaciones: {limpiar_texto(texto)}")
         self.ln(3)
 
-# Validación de parámetros
 def validar_parametro(valor, minimo, maximo):
     if valor is None:
         return "—"
@@ -139,10 +133,10 @@ def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta)
 def formulario_analisis(nombre_modulo, parametros):
     st.subheader(f"🔬 Análisis de {nombre_modulo}")
     try:
-        with open(LOGO_PATH, "rb") as f:
-            st.image(f, width=180)
-    except FileNotFoundError:
-        st.warning("⚠️ Logo no encontrado")
+        logo = Image.open(LOGO_PATH)
+        st.image(logo, width=180)
+    except:
+        pass
     valores = []
     for param in parametros:
         label = param["nombre"]
@@ -165,7 +159,6 @@ def formulario_analisis(nombre_modulo, parametros):
             carpeta=nombre_modulo.lower().replace(' ', '_')
         )
 
-# Gestión del selector de análisis
 if "analisis_actual" not in st.session_state:
     st.session_state.analisis_actual = "-- Seleccionar --"
 
@@ -173,19 +166,18 @@ analisis_nuevo = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccio
 
 if analisis_nuevo != st.session_state.analisis_actual:
     st.session_state.analisis_actual = analisis_nuevo
-    st.session_state.clear()
+    st.experimental_rerun()
 
-# Ejecutar el formulario según el análisis
 if analisis_nuevo in PARAMETROS_CONFIG:
     formulario_analisis(analisis_nuevo, PARAMETROS_CONFIG[analisis_nuevo])
 
 elif analisis_nuevo == "Gas Natural":
     st.subheader("🛢️ Análisis de Gas Natural")
     try:
-        with open(LOGO_PATH, "rb") as f:
-            st.image(f, width=180)
-    except FileNotFoundError:
-        st.warning("⚠️ Logo no encontrado")
+        logo = Image.open(LOGO_PATH)
+        st.image(logo, width=180)
+    except:
+        pass
 
     st.markdown("Cargá el archivo CSV generado por el cromatógrafo con la composición del gas natural.")
     archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
@@ -210,7 +202,6 @@ elif analisis_nuevo == "Gas Natural":
             )
         except Exception as e:
             st.error(f"Error al procesar el archivo: {e}")
-
 
 
 
