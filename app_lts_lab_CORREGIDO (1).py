@@ -73,9 +73,9 @@ La aplicación cuenta con los siguientes módulos:
 - **Gasolina Estabilizada:** se revisan parámetros que impactan en la calidad del combustible como presión de vapor, sales y densidad.
 
 Cada análisis cuenta con:
-✅ Validación automática de rangos aceptables
-📤 Descarga de informe profesional en PDF
-🧠 Explicaciones pedagógicas de cada parámetro
+✅ Validación automática de rangos aceptables  
+📤 Descarga de informe profesional en PDF  
+🧠 Explicaciones pedagógicas de cada parámetro  
 📐 Fórmulas visibles utilizadas en los cálculos
 
 ---
@@ -112,5 +112,13 @@ PARAMETROS_CONFIG = {
     ]
 }
 
-# El resto del código se mantiene sin cambios para preservar funcionalidad
+# Menú de selección
+analisis = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"])
+
+if analisis != "-- Seleccionar --":
+    st.session_state["tipo_analisis"] = analisis
+
+# Continúa con la lógica del análisis seleccionado en los siguientes módulos...
+
+
 
