@@ -11,11 +11,11 @@ import base64
 # Configuración inicial
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 
-# Estilos: color de fondo
+# Estilos: color de fondo pastel técnico
 st.markdown("""
     <style>
         .stApp {
-            background-color: #f0f4f7;
+            background-color: #e0f7fa;
         }
     </style>
 """, unsafe_allow_html=True)
