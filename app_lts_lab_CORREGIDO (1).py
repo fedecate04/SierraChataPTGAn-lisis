@@ -288,42 +288,34 @@ A partir del archivo de cromatografía, se calculan automáticamente:
             for k, v in resultados.items():
                 st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
 
-            st.markdown("### 📘 Tabla explicativa de parámetros")
+            try:
+    ...
+    st.markdown("### 📘 Tabla explicativa de parámetros")
 
-st.dataframe(pd.DataFrame({
-    "Parámetro": [
-        "HHV (MJ/mol)",
-        "LHV estimado (MJ/mol)",
-        "Índice de Wobbe (MJ/mol)",
-        "Densidad relativa"
-    ],
-    "Descripción": [
-        "Energía total liberada por combustión completa de 1 mol de gas incluyendo la condensación del agua.",
-        "Energía útil descontando el calor de vaporización del agua. Estimado como HHV - 0.09.",
-        "Permite comparar gases para su uso en quemadores. W = HHV / sqrt(densidad relativa).",
-        "Relación entre la densidad del gas y la del aire seco (adimensional)."
-    ],
-    "Fórmula": [
-        "HHV = Σ(yᵢ · HHVᵢ)",
-        "LHV ≈ HHV - 0.09",
-        "W = HHV / √ρrel",
-        "ρrel = ρgas / ρaire"
-    ]
-}))
+    st.dataframe(pd.DataFrame({
+        "Parámetro": [
+            "HHV (MJ/mol)",
+            "LHV estimado (MJ/mol)",
+            "Índice de Wobbe (MJ/mol)",
+            "Densidad relativa"
+        ],
+        "Descripción": [
+            "Energía total liberada por combustión completa de 1 mol de gas incluyendo la condensación del agua.",
+            "Energía útil descontando el calor de vaporización del agua. Estimado como HHV - 0.09.",
+            "Permite comparar gases para su uso en quemadores. W = HHV / sqrt(densidad relativa).",
+            "Relación entre la densidad del gas y la del aire seco (adimensional)."
+        ],
+        "Fórmula": [
+            "HHV = Σ(yᵢ · HHVᵢ)",
+            "LHV ≈ HHV - 0.09",
+            "W = HHV / √ρrel",
+            "ρrel = ρgas / ρaire"
+        ]
+    }))
 
+except Exception as e:
+    st.error(f"❌ Error al procesar el archivo o mostrar resultados: {e}")
 
-            generar_pdf(
-                nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                operador=operador,
-                explicacion="Análisis composicional del gas natural. Se calculan HHV, LHV, Wobbe y densidad relativa con base en GPA 2145 e ISO 6976. Fórmulas utilizadas: HHV = Σ(y_i·HHV_i), W = HHV / √ρ_rel, LHV ≈ HHV - 0.09",
-                resultados=resultados,
-                obs=obs,
-                carpeta="gas_natural"
-            )
-
-
-        except Exception as e:
-            st.error(f"❌ Error al procesar el archivo: {e}")
 
 
 elif analisis == "📁 Ver Historial":
