@@ -15,17 +15,15 @@ st.markdown("""
     <style>
         .stApp {
             background-color: #0d1117;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
+            color: #ffffff;
         }
 
         input, textarea, .stTextInput, .stTextArea, .stNumberInput, .stSelectbox, .stDownloadButton, .stFileUploader {
-            background-color: #1e2228 !important;
-            color: #e0e0e0 !important;
+            background-color: #0d1117 !important;
+            color: white !important;
             border: 1px solid #5a5f66 !important;
-            border-radius: 6px;
-            padding: 0.3rem;
             box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            border-radius: 6px;
         }
 
         button {
@@ -37,23 +35,12 @@ st.markdown("""
             box-shadow: 1px 1px 5px rgba(0,0,0,0.2);
         }
 
-        .stSelectbox > div {
-            color: black !important;
-        }
-
         .logo-container {
             text-align: center;
             margin-bottom: 1rem;
         }
-
-        .stTitle {
-            font-size: 2.2em;
-            font-weight: bold;
-            color: #58a6ff;
-        }
     </style>
 """, unsafe_allow_html=True)
-
 
 # Logo
 def cargar_logo_base64(path):
@@ -199,8 +186,17 @@ def mostrar_analisis_gas():
         try:
             df = pd.read_csv(archivo)
             st.dataframe(df)
-            # Aquí deben ir tus cálculos energéticos del gas natural
-            st.success("✅ Archivo cargado y listo para procesar.")
+            resultados = {col: f"{df[col].mean():.2f}" for col in df.columns if df[col].dtype in [np.float64, np.int64]}
+            st.markdown("### 📊 Resultados del cálculo")
+            st.write(resultados)
+            generar_pdf(
+                nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                operador=operador,
+                explicacion="Análisis composicional del gas natural.",
+                resultados=resultados,
+                obs=obs,
+                carpeta="gas_natural"
+            )
         except Exception as e:
             st.error(f"❌ Error en el cálculo: {e}")
 
@@ -217,5 +213,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
