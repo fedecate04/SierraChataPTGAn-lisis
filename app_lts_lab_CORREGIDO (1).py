@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from fpdf import FPDF
 from datetime import datetime
 import os
@@ -11,25 +10,55 @@ import unicodedata
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 LOGO_PATH = "logopetrogas.png"
 
-# Mostrar logo con manejo de errores
+# Mostrar logo
 try:
     with open(LOGO_PATH, "rb") as logo_file:
         st.image(logo_file.read(), width=180)
 except Exception:
     st.warning("⚠️ No se pudo cargar el logo.")
 
-# Título y descripción
 st.title("🧪 Laboratorio de Planta LTS")
 st.markdown("""
 Sistema profesional de análisis y validación de laboratorio con informes PDF para plantas de tratamiento de gas natural.
-
-### 📌 Importancia del Análisis
-Garantizar que los fluidos cumplan con las especificaciones evita corrosión, fallas operativas y asegura la eficiencia de la planta LTS.
 """)
 
-# Sidebar para activar validaciones
 st.sidebar.header("⚙️ Opciones")
 activar_validaciones = st.sidebar.checkbox("Activar validación de rangos", value=True)
+
+# Explicaciones pedagógicas por módulo
+EXPLICACIONES = {
+    "MEG": (
+        "📘 **¿Qué analizamos en el MEG (Monoetilenglicol)?**\n\n"
+        "- **pH**: controla la acidez, fundamental para prevenir corrosión.\n"
+        "- **Concentración**: asegura la capacidad anticongelante.\n"
+        "- **Densidad y Cloruros**: determinan pureza y contaminantes.\n"
+        "- **MDEA**: presencia de aminas utilizadas en tratamientos químicos."
+    ),
+    "TEG": (
+        "📘 **¿Qué analizamos en el TEG (Trietilenglicol)?**\n\n"
+        "- **pH**: estabilidad química.\n"
+        "- **Concentración**: eficiencia de deshidratación del gas.\n"
+        "- **Cloruros y Hierro**: indicadores de corrosión o contaminación."
+    ),
+    "Agua Desmineralizada": (
+        "📘 **¿Por qué se analiza el agua desmineralizada?**\n\n"
+        "- **pH**: neutralidad deseada.\n"
+        "- **Cloruros**: impurezas que afectan turbinas, calderas, etc.\n"
+        "- **Densidad**: indicador indirecto de sales u otros compuestos."
+    ),
+    "Gasolina Estabilizada": (
+        "📘 **Parámetros importantes en la gasolina estabilizada:**\n\n"
+        "- **TVR**: presión de vapor, clave para seguridad.\n"
+        "- **Salinidad**: sales disueltas que generan corrosión.\n"
+        "- **Densidad**: control de calidad del producto final."
+    ),
+    "Gas Natural": (
+        "📘 **¿Qué analizamos en el gas natural?**\n\n"
+        "- **Poder Calorífico (HHV)**: energía liberada en combustión.\n"
+        "- **Índice de Wobbe**: permite comparar diferentes gases.\n"
+        "- **Fracciones molares**: necesarias para todos los cálculos energéticos y normativos."
+    )
+}
 
 # Parámetros por módulo
 PARAMETROS_CONFIG = {
@@ -58,20 +87,17 @@ PARAMETROS_CONFIG = {
     ]
 }
 
-# Crear carpetas de salida
+# Crear carpetas
 for carpeta in PARAMETROS_CONFIG:
     os.makedirs(f"informes/{carpeta.lower().replace(' ', '_')}", exist_ok=True)
 os.makedirs("informes/gas_natural", exist_ok=True)
 
-# Limpieza de texto para PDF
 def limpiar_texto(texto):
     if not isinstance(texto, str):
         texto = str(texto)
     texto = texto.replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
-    texto = unicodedata.normalize("NFKD", texto).encode("latin1", "ignore").decode("latin1")
-    return texto
+    return unicodedata.normalize("NFKD", texto).encode("latin1", "ignore").decode("latin1")
 
-# Clase PDF personalizada
 class PDF(FPDF):
     def header(self):
         try:
@@ -110,7 +136,6 @@ class PDF(FPDF):
         self.multi_cell(0, 8, f"Observaciones: {limpiar_texto(texto)}")
         self.ln(3)
 
-# Validación de parámetros
 def validar_parametro(valor, minimo, maximo):
     if valor is None:
         return "—"
@@ -119,15 +144,10 @@ def validar_parametro(valor, minimo, maximo):
 def mostrar_resultados_validacion(parametros):
     filas = []
     for nombre, val, unidad, minimo, maximo in parametros:
-        if activar_validaciones:
-            estado = validar_parametro(val, minimo, maximo)
-            label = f"Parámetro: {nombre}\nValor: {val} {unidad}\nRango esperado: {minimo} - {maximo} {unidad}\nResultado: {estado}"
-        else:
-            label = f"{val} {unidad}"
-        filas.append((nombre, label))
+        estado = validar_parametro(val, minimo, maximo) if activar_validaciones else ""
+        filas.append((nombre, f"{val} {unidad} | {estado}"))
     return dict(filas)
 
-# Generar PDF
 def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta):
     pdf = PDF()
     pdf.add_page()
@@ -141,14 +161,9 @@ def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta)
         f.write(pdf_bytes)
     st.download_button("⬇️ Descargar informe PDF", BytesIO(pdf_bytes), nombre_archivo, mime="application/pdf")
 
-# Formulario para análisis físico-químicos
 def formulario_analisis(nombre_modulo, parametros):
     st.subheader(f"🔬 Análisis de {nombre_modulo}")
-    try:
-        with open(LOGO_PATH, "rb") as logo_file:
-            st.image(logo_file.read(), width=180)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el logo.")
+    st.markdown(EXPLICACIONES[nombre_modulo])
     valores = []
     for param in parametros:
         label = param["nombre"]
@@ -165,21 +180,15 @@ def formulario_analisis(nombre_modulo, parametros):
         generar_pdf(
             nombre_archivo=f"Informe_{nombre_modulo}_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             operador=operador,
-            explicacion=f"Análisis de {nombre_modulo} realizado en planta LTS. Los valores fueron comparados con los límites técnicos recomendados.",
+            explicacion=EXPLICACIONES[nombre_modulo],
             resultados=resultados,
             obs=obs,
             carpeta=nombre_modulo.lower().replace(' ', '_')
         )
 
-# Formulario para Gas Natural
 def mostrar_analisis_gas():
     st.subheader("🛢️ Análisis de Gas Natural")
-    try:
-        with open(LOGO_PATH, "rb") as logo_file:
-            st.image(logo_file.read(), width=180)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el logo.")
-    st.markdown("Cargá el archivo CSV generado por el cromatógrafo con la composición del gas natural.")
+    st.markdown(EXPLICACIONES["Gas Natural"])
     archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
     operador = st.text_input("👤 Operador", key="operador_gas")
     obs = st.text_area("Observaciones", key="obs_gas")
@@ -187,19 +196,11 @@ def mostrar_analisis_gas():
         try:
             df = pd.read_csv(archivo)
             st.dataframe(df)
-            if df.shape[1] >= 2:
-                resultados = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
-            else:
-                resultados = {df.columns[0]: df.iloc[:, 0].values.tolist()}
-            resultados["Explicación del Cálculo"] = (
-                "HHV = ∑(fracción molar × poder calorífico)\n"
-                "Índice de Wobbe = HHV / sqrt(densidad relativa)\n"
-                "Fórmulas según GPA 2145 e ISO 6976."
-            )
+            resultados = df.set_index(df.columns[0]).iloc[:, 0].to_dict() if df.shape[1] >= 2 else {df.columns[0]: df.iloc[:, 0].values.tolist()}
             generar_pdf(
                 nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 operador=operador,
-                explicacion="Análisis composicional del gas natural incluyendo poder calorífico (HHV), índice de Wobbe y componentes.",
+                explicacion=EXPLICACIONES["Gas Natural"],
                 resultados=resultados,
                 obs=obs,
                 carpeta="gas_natural"
@@ -207,13 +208,8 @@ def mostrar_analisis_gas():
         except Exception as e:
             st.error(f"❌ Error al procesar el archivo: {e}")
 
-# App principal
 def main():
-    analisis_nuevo = st.selectbox(
-        "Seleccioná el tipo de análisis:",
-        ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"],
-        key="tipo_analisis"
-    )
+    analisis_nuevo = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"], key="tipo_analisis")
     if analisis_nuevo == "-- Seleccionar --":
         st.info("📌 Elegí un análisis en el menú desplegable para comenzar.")
     elif analisis_nuevo in PARAMETROS_CONFIG:
