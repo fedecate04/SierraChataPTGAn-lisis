@@ -180,10 +180,9 @@ def mostrar_analisis_gas():
             datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
             comp = {}
             for k, v in datos.items():
-    nombre = alias.get(k.strip(), k.strip())
-    if nombre in pcs_data:
-        comp[nombre] = float(v)
-
+            nombre = alias.get(k.strip(), k.strip())
+            if nombre in pcs_data:
+            comp[nombre] = float(v)
 
             fracciones = {k: v / 100 for k, v in comp.items()}
 
