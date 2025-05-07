@@ -180,9 +180,9 @@ def mostrar_analisis_gas():
             datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
             comp = {}
             for k, v in datos.items():
-            nombre = alias.get(k.strip(), k.strip())
-            if nombre in pcs_data:
-            comp[nombre] = float(v)
+                nombre = alias.get(str(k).strip(), str(k).strip())
+                if nombre in pcs_data:
+                    comp[nombre] = float(v)
 
             fracciones = {k: v / 100 for k, v in comp.items()}
 
@@ -239,6 +239,7 @@ def mostrar_analisis_gas():
             st.error(f"❌ Error en el procesamiento del archivo: {e}")
 
 mostrar_analisis_gas()
+
 
 
 
