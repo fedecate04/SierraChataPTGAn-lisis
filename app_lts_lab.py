@@ -18,6 +18,7 @@ try:
 except Exception:
     st.warning("⚠️ No se pudo cargar el logo.")
 
+
 st.title("🧪 Laboratorio de Planta LTS")
 st.markdown("""
 Sistema profesional de análisis y validación de laboratorio con informes PDF para plantas de tratamiento de gas natural.
