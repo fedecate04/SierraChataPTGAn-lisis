@@ -118,7 +118,129 @@ analisis = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --
 if analisis != "-- Seleccionar --":
     st.session_state["tipo_analisis"] = analisis
 
-# Continúa con la lógica del análisis seleccionado en los siguientes módulos...
+import streamlit as st
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from io import BytesIO
+from fpdf import FPDF
+import os
+
+# Parámetros de poder calorífico y peso molecular
+pcs_data = {
+    "CH4": 39.82, "C2H6": 68.47, "C3H8": 93.1, "i-C4H10": 114.2,
+    "n-C4H10": 114.0, "i-C5H12": 133.9, "n-C5H12": 134.2, "C6H14": 152.4,
+    "N2": 0.0, "CO2": 0.0
+}
+pm_data = {
+    "CH4": 16.04, "C2H6": 30.07, "C3H8": 44.1, "i-C4H10": 58.12,
+    "n-C4H10": 58.12, "i-C5H12": 72.15, "n-C5H12": 72.15, "C6H14": 86.18,
+    "N2": 28.01, "CO2": 44.01
+}
+
+alias = {
+    "Methane": "CH4", "Ethane": "C2H6", "Propane": "C3H8", "i-Butane": "i-C4H10",
+    "n-Butane": "n-C4H10", "i-Pentane": "i-C5H12", "n-Pentane": "n-C5H12", "Hexane": "C6H14",
+    "Nitrogen": "N2", "Carbon Dioxide": "CO2"
+}
+
+class PDF(FPDF):
+    def header(self):
+        self.set_font("Arial", "B", 12)
+        self.cell(0, 10, "Informe de Análisis de Gas Natural", ln=True, align="C")
+        self.set_font("Arial", "", 10)
+        self.cell(0, 10, datetime.now().strftime("%Y-%m-%d %H:%M"), ln=True, align="R")
+        self.ln(5)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font("Arial", "I", 8)
+        self.cell(0, 10, "Confidencial - Uso interno Petrobras LTS", 0, 0, "C")
+
+    def add_block(self, title, content):
+        self.set_font("Arial", "B", 10)
+        self.cell(0, 8, title, ln=True)
+        self.set_font("Arial", "", 9)
+        self.multi_cell(0, 6, str(content))
+        self.ln(2)
+
+def mostrar_analisis_gas():
+    st.subheader("🛢️ Análisis de Gas Natural")
+    st.markdown("Subí el archivo CSV generado por el cromatógrafo con la composición en % molar.")
+
+    archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
+    operador = st.text_input("👤 Operador (Gas Natural)")
+    obs = st.text_area("📝 Observaciones")
+
+    if archivo:
+        try:
+            df = pd.read_csv(archivo)
+            st.dataframe(df)
+
+            datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
+            comp = {}
+            for k, v in datos.items():
+                nombre = alias.get(k.strip(), k.strip())
+                if nombre in pcs_data:
+                    comp[nombre] = float(v)
+
+            fracciones = {k: v / 100 for k, v in comp.items()}
+
+            pcs = sum(fracciones[k] * pcs_data[k] for k in fracciones)
+            pci = pcs - 2.44 * fracciones.get("CH4", 0)
+            pm_gas = sum(fracciones[k] * pm_data[k] for k in fracciones)
+            dens_rel = pm_gas / 28.964 if pm_gas else 0
+            wobbe = pcs / np.sqrt(dens_rel) if dens_rel > 0 else 0
+
+            resultados = {
+                "Poder Calorífico Superior (PCS) [MJ/m³]": round(pcs, 2),
+                "Poder Calorífico Inferior (PCI) [MJ/m³]": round(pci, 2),
+                "Peso Molecular del Gas [g/mol]": round(pm_gas, 2),
+                "Densidad Relativa (a aire seco)": round(dens_rel, 4),
+                "Índice de Wobbe [MJ/m³]": round(wobbe, 2)
+            }
+
+            st.markdown("### 📊 Resultados del Cálculo")
+            st.write(resultados)
+
+            st.markdown("""
+                #### 📐 Fórmulas Utilizadas
+                - $\text{PCS} = \sum x_i \cdot \text{PCS}_i$
+                - $\text{PCI} = \text{PCS} - 2.44 \cdot x_{CH_4}$
+                - $\text{PM}_{\text{gas}} = \sum x_i \cdot PM_i$
+                - $\text{Densidad Relativa} = \frac{PM_{gas}}{28.964}$
+                - $\text{Índice de Wobbe} = \frac{PCS}{\sqrt{\text{Densidad Relativa}}}$
+            """, unsafe_allow_html=True)
+
+            pdf = PDF()
+            pdf.add_page()
+            pdf.add_block("Operador", operador)
+            pdf.add_block("Explicación", "Cálculo de propiedades energéticas y fisicoquímicas del gas natural según ISO 6976 y GPA 2145.")
+            for k, v in resultados.items():
+                pdf.add_block(k, v)
+
+            pdf.add_block("Fórmulas Utilizadas", """
+- PCS = Σ (xi * PCSi)  
+- PCI = PCS - 2.44 * x_CH4  
+- PM_gas = Σ (xi * PMi)  
+- Densidad Relativa = PM_gas / 28.964  
+- Índice de Wobbe = PCS / sqrt(Densidad Relativa)
+            """)
+            pdf.add_block("Observaciones", obs or "Sin observaciones.")
+
+            buffer = BytesIO()
+            pdf_data = pdf.output(dest="S").encode("latin1")
+            buffer.write(pdf_data)
+            buffer.seek(0)
+
+            st.download_button("⬇️ Descargar informe PDF", buffer, file_name=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf", mime="application/pdf")
+
+        except Exception as e:
+            st.error(f"❌ Error en el procesamiento del archivo: {e}")
+
+mostrar_analisis_gas()
+
+
 
 
 
