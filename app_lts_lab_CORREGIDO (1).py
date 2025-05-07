@@ -237,6 +237,15 @@ def mostrar_analisis_gas():
 
         except Exception as e:
             st.error(f"❌ Error en el procesamiento del archivo: {e}")
+            
+# Menú principal de selección
+opciones = ["-- Seleccionar --", "Gas Natural"]
+seleccion = st.selectbox("Seleccioná el tipo de análisis:", opciones)
+
+if seleccion == "Gas Natural":
+    mostrar_analisis_gas()
+else:
+    st.info("📌 Seleccioná un análisis en el menú desplegable.")
 
 if seleccion == "Gas Natural":
     mostrar_analisis_gas()
