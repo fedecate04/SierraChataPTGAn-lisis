@@ -164,9 +164,8 @@ if "analisis_actual" not in st.session_state:
 
 analisis_nuevo = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"], key="tipo_analisis")
 
-if analisis_nuevo != st.session_state.analisis_actual:
-    st.session_state.analisis_actual = analisis_nuevo
-    st.experimental_rerun()
+st.session_state.analisis_actual = analisis_nuevo
+
 
 if analisis_nuevo in PARAMETROS_CONFIG:
     formulario_analisis(analisis_nuevo, PARAMETROS_CONFIG[analisis_nuevo])
