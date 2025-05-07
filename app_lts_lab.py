@@ -9,7 +9,7 @@ from io import BytesIO
 
 # Configuración inicial
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
-LOGO_PATH = "LOGO PETROGAS.PNG"
+LOGO_PATH = "logopetrogas.png"
 
 # Mostrar logo con manejo de errores
 try:
@@ -132,10 +132,11 @@ def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta)
 def formulario_analisis(nombre_modulo, parametros):
     st.subheader(f"🔬 Análisis de {nombre_modulo}")
     try:
-        with open(LOGO_PATH, "rb") as logo_file:
-            st.image(logo_file.read(), width=180)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el logo.")
+    with open(LOGO_PATH, "rb") as logo_file:
+        st.image(logo_file.read(), width=180)
+except Exception:
+    st.warning("⚠️ No se pudo cargar el logo.")
+
     valores = []
     for param in parametros:
         label = param["nombre"]
