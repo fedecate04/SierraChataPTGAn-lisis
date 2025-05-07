@@ -271,25 +271,50 @@ A partir del archivo de cromatografía, se calculan automáticamente:
             }
 
             # Mostrar fórmulas
-            st.markdown("### 📘 Parámetros calculados y fórmulas")
-            st.latex("HHV = \\sum y_i \\cdot HHV_i")
-            st.latex("W = \\frac{HHV}{\\sqrt{\\rho_{rel}}}")
-            st.latex("LHV \\approx HHV - 0.09")
+try:
+    st.markdown("### 📘 Parámetros calculados y fórmulas")
+    st.latex("HHV = \\sum y_i \\cdot HHV_i")
+    st.latex("W = \\frac{HHV}{\\sqrt{\\rho_{rel}}}")
+    st.latex("LHV \\approx HHV - 0.09")
 
-            # Mostrar tabla con definiciones
-            explicaciones = {
-                "HHV (MJ/mol)": "Energía total liberada al quemar 1 mol de gas, incluyendo condensación de H₂O.",
-                "LHV estimado (MJ/mol)": "HHV menos el calor latente de vaporización del agua (estimado).",
-                "Índice de Wobbe (MJ/mol)": "Relación entre HHV y raíz de densidad relativa, clave para intercambiabilidad.",
-                "Densidad relativa": "Relación entre densidad del gas y la del aire (valor adimensional)."
-            }
+    # Mostrar tabla con definiciones
+    explicaciones = {
+        "HHV (MJ/mol)": "Energía total liberada al quemar 1 mol de gas, incluyendo condensación de H₂O.",
+        "LHV estimado (MJ/mol)": "HHV menos el calor latente de vaporización del agua (estimado).",
+        "Índice de Wobbe (MJ/mol)": "Relación entre HHV y raíz de densidad relativa, clave para intercambiabilidad.",
+        "Densidad relativa": "Relación entre densidad del gas y la del aire (valor adimensional)."
+    }
 
-            st.markdown("### 📊 Resultados:")
-            for k, v in resultados.items():
-                st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
+    st.markdown("### 📊 Resultados:")
+    for k, v in resultados.items():
+        st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
 
-            try:
     st.markdown("### 📘 Tabla explicativa de parámetros")
+
+    st.dataframe(pd.DataFrame({
+        "Parámetro": [
+            "HHV (MJ/mol)",
+            "LHV estimado (MJ/mol)",
+            "Índice de Wobbe (MJ/mol)",
+            "Densidad relativa"
+        ],
+        "Descripción": [
+            "Energía total liberada por combustión completa de 1 mol de gas incluyendo la condensación del agua.",
+            "Energía útil descontando el calor de vaporización del agua. Estimado como HHV - 0.09.",
+            "Permite comparar gases para su uso en quemadores. W = HHV / sqrt(densidad relativa).",
+            "Relación entre la densidad del gas y la del aire seco (adimensional)."
+        ],
+        "Fórmula": [
+            "HHV = Σ(yᵢ · HHVᵢ)",
+            "LHV ≈ HHV - 0.09",
+            "W = HHV / √ρrel",
+            "ρrel = ρgas / ρaire"
+        ]
+    }))
+
+except Exception as e:
+    st.error(f"❌ Error al procesar el archivo o mostrar resultados: {e}")
+
 
     st.dataframe(pd.DataFrame({
         "Parámetro": [
