@@ -1,46 +1,35 @@
-
-# LTS Lab Analyzer - App mejorada y corregida
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 from fpdf import FPDF
 from datetime import datetime
 import os
-from io import BytesIO
-from PIL import Image
 import re
 
-# Configuración visual
+# Configuración de página
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 LOGO_PATH = "logopetrogas.png"
-MANUAL_PATH = "manual_operador_LTS.pdf"
-HISTORIAL_PATH = "historial.csv"
 
-# Estilo
+# Estilo visual oscuro
 st.markdown("""
     <style>
         .stApp { background-color: #2d2d2d; color: #f0f0f0; }
-        .stButton>button { background-color: #0d6efd; color: white; border: none; }
-        input, textarea, .stTextInput, .stTextArea {
-            background-color: #3a3a3a !important;
-            color: white !important;
-        }
-        .stSelectbox div, .stDownloadButton, .stNumberInput {
-            background-color: #3a3a3a !important;
-            color: white !important;
+        .stButton>button { background-color: #0d6efd; color: white; }
+        input, textarea, .stTextInput, .stTextArea, .stNumberInput, .stSelectbox div {
+            background-color: #3a3a3a !important; color: white !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Funciones auxiliares
+# Función para limpiar caracteres incompatibles
 def limpiar_texto(texto):
     texto = str(texto)
     texto = texto.replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
     texto = texto.replace("\u221a", "sqrt")
-    texto = re.sub(r'[^\x00-\xFF]', '', texto)
+    texto = re.sub(r'[^\x00-\x7F]+', '', texto)  # eliminar caracteres no ascii
     return texto
 
+# Clase PDF
 class PDF(FPDF):
     def header(self):
         if os.path.exists(LOGO_PATH):
@@ -56,68 +45,93 @@ class PDF(FPDF):
         self.set_font('Arial', 'I', 8)
         self.cell(0, 10, 'Confidencial - Uso interno Petrobras LTS', 0, 0, 'C')
 
-    def add_operator(self, operador):
+    def agregar_datos(self, operador, resultados, observaciones, explicacion):
         self.set_font('Arial', '', 10)
         self.cell(0, 10, f"Operador: {limpiar_texto(operador)}", 0, 1)
-        self.ln(2)
-
-    def add_explanation(self, texto):
-        self.set_font('Arial', 'I', 9)
-        self.multi_cell(0, 6, limpiar_texto(texto))
-        self.ln(2)
-        self.set_font('Arial', '', 9)
-        self.multi_cell(0, 6, "Fórmulas utilizadas:\nW = HHV / sqrt(densidad relativa)\n(Ver GPA 2145 / ISO 6976)")
         self.ln(3)
 
-    def add_results(self, resultados):
+        self.set_font('Arial', 'B', 11)
+        self.cell(0, 10, 'Resultados:', 0, 1)
         self.set_font('Arial', '', 10)
         for k, v in resultados.items():
-            self.cell(0, 8, f"{limpiar_texto(k)}: {limpiar_texto(v)}", 0, 1)
-        self.ln(4)
-
-    def add_observaciones(self, texto="Sin observaciones."):
-        self.set_font('Arial', '', 10)
-        self.multi_cell(0, 8, f"Observaciones: {limpiar_texto(texto)}")
+            self.cell(0, 8, f"{k}: {v}", 0, 1)
         self.ln(3)
 
-# Resultado Gas Natural con fórmula y explicaciones
-st.title("🧪 LTS Lab Analyzer - Sistema de Análisis de Laboratorio")
+        self.set_font('Arial', 'B', 11)
+        self.cell(0, 10, 'Explicación técnica:', 0, 1)
+        self.set_font('Arial', 'I', 9)
+        self.multi_cell(0, 6, limpiar_texto(explicacion))
+        self.ln(3)
 
-try:
-    st.markdown("### 📘 Parámetros calculados y fórmulas")
-    st.latex("HHV = \sum y_i \cdot HHV_i")
-    st.latex("W = \frac{HHV}{\sqrt{\rho_{rel}}}")
-    st.latex("LHV \approx HHV - 0.09")
+        self.set_font('Arial', 'B', 11)
+        self.cell(0, 10, 'Observaciones:', 0, 1)
+        self.set_font('Arial', '', 10)
+        self.multi_cell(0, 6, limpiar_texto(observaciones))
+        self.ln(5)
 
-    resultados = {
-        "HHV (MJ/mol)": 0.9,
-        "LHV estimado (MJ/mol)": 0.81,
-        "Índice de Wobbe (MJ/mol)": 1.2,
-        "Densidad relativa": 0.65
-    }
+# Título
+st.title("🧪 LTS Lab Analyzer - Análisis de Gas Natural")
 
-    explicaciones = {
-        "HHV (MJ/mol)": "Energía total liberada al quemar 1 mol de gas, incluyendo condensación de H₂O.",
-        "LHV estimado (MJ/mol)": "HHV menos el calor latente de vaporización del agua (estimado).",
-        "Índice de Wobbe (MJ/mol)": "Relación entre HHV y raíz de densidad relativa, clave para intercambiabilidad.",
-        "Densidad relativa": "Relación entre densidad del gas y la del aire (valor adimensional)."
-    }
+# Fórmulas y explicaciones
+st.markdown("### 📘 Fórmulas utilizadas")
+st.latex("HHV = \sum y_i \cdot HHV_i")
+st.latex("W = \dfrac{HHV}{\sqrt{\\rho_{rel}}}")
+st.latex("LHV \\approx HHV - 0.09")
 
-    st.markdown("### 📊 Resultados:")
-    for k, v in resultados.items():
-        st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
+# Resultados de ejemplo
+resultados = {
+    "HHV (MJ/mol)": 0.9,
+    "LHV estimado (MJ/mol)": 0.81,
+    "Índice de Wobbe (MJ/mol)": 1.2,
+    "Densidad relativa": 0.65
+}
 
-    st.markdown("### 📘 Tabla explicativa de parámetros")
-    st.dataframe(pd.DataFrame({
-        "Parámetro": list(explicaciones.keys()),
-        "Descripción": list(explicaciones.values()),
-        "Fórmula": [
-            "HHV = Σ(yᵒ · HHVᵒ)",
-            "LHV ≈ HHV - 0.09",
-            "W = HHV / √ρrel",
-            "ρrel = ρgas / ρaire"
-        ]
-    }))
+explicaciones = {
+    "HHV (MJ/mol)": "Energía total liberada al quemar 1 mol de gas, incluyendo condensación de H₂O.",
+    "LHV estimado (MJ/mol)": "HHV menos el calor latente de vaporización del agua.",
+    "Índice de Wobbe (MJ/mol)": "Relación entre HHV y raíz de densidad relativa, clave para intercambiabilidad.",
+    "Densidad relativa": "Relación entre densidad del gas y la del aire."
+}
 
-except Exception as e:
-    st.error(f"❌ Error al procesar los parámetros del gas: {e}")
+st.markdown("### 📊 Resultados obtenidos")
+for k, v in resultados.items():
+    st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
+
+# Tabla explicativa
+st.markdown("### 📘 Tabla de parámetros")
+st.dataframe(pd.DataFrame({
+    "Parámetro": list(explicaciones.keys()),
+    "Descripción": list(explicaciones.values()),
+    "Fórmula": [
+        "HHV = Σ(yᵢ · HHVᵢ)",
+        "LHV ≈ HHV - 0.09",
+        "W = HHV / √ρrel",
+        "ρrel = ρgas / ρaire"
+    ]
+}))
+
+# PDF
+st.markdown("---")
+st.markdown("### 📝 Generar informe PDF")
+
+operador = st.text_input("Nombre del operador", value="Federico Catereniuc")
+observaciones = st.text_area("Observaciones adicionales", value="Sin observaciones.")
+generar = st.button("📄 Generar PDF de informe")
+
+if generar:
+    pdf = PDF()
+    pdf.add_page()
+    explicacion_completa = "\n".join([f"{k}: {v}" for k, v in explicaciones.items()])
+    pdf.agregar_datos(operador, resultados, observaciones, explicacion_completa)
+
+    buffer = BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    st.download_button(
+        label="📥 Descargar informe PDF",
+        data=buffer,
+        file_name=f"informe_gas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+        mime="application/pdf"
+    )
+
+
