@@ -201,16 +201,16 @@ def mostrar_analisis_gas():
             }
 
             st.markdown("### 📊 Resultados del Cálculo")
-            st.write(resultados)
+            st.json(resultados)
 
             st.markdown("""
                 #### 📐 Fórmulas Utilizadas
-                - $\text{PCS} = \sum x_i \cdot \text{PCS}_i$
-                - $\text{PCI} = \text{PCS} - 2.44 \cdot x_{CH_4}$
-                - $\text{PM}_{\text{gas}} = \sum x_i \cdot PM_i$
-                - $\text{Densidad Relativa} = \frac{PM_{gas}}{28.964}$
-                - $\text{Índice de Wobbe} = \frac{PCS}{\sqrt{\text{Densidad Relativa}}}$
-            """, unsafe_allow_html=True)
+                - `PCS = Σ (xi × PCSi)`
+                - `PCI = PCS - 2.44 × xCH4`
+                - `PMgas = Σ (xi × PMi)`
+                - `Densidad Relativa = PMgas / 28.964`
+                - `Índice de Wobbe = PCS / sqrt(Densidad Relativa)`
+            """)
 
             pdf = PDF()
             pdf.add_page()
@@ -220,16 +220,16 @@ def mostrar_analisis_gas():
                 pdf.add_block(k, v)
 
             pdf.add_block("Fórmulas Utilizadas", """
-- PCS = Σ (xi * PCSi)  
-- PCI = PCS - 2.44 * x_CH4  
-- PM_gas = Σ (xi * PMi)  
-- Densidad Relativa = PM_gas / 28.964  
+- PCS = Σ (xi * PCSi)
+- PCI = PCS - 2.44 * x_CH4
+- PM_gas = Σ (xi * PMi)
+- Densidad Relativa = PM_gas / 28.964
 - Índice de Wobbe = PCS / sqrt(Densidad Relativa)
             """)
             pdf.add_block("Observaciones", obs or "Sin observaciones.")
 
             buffer = BytesIO()
-            pdf_data = pdf.output(dest="S").encode("latin1")
+            pdf_data = pdf.output(dest="S").encode("latin-1", "replace")
             buffer.write(pdf_data)
             buffer.seek(0)
 
@@ -238,14 +238,8 @@ def mostrar_analisis_gas():
         except Exception as e:
             st.error(f"❌ Error en el procesamiento del archivo: {e}")
 
-# Menú principal de selección
-opciones = ["-- Seleccionar --", "Gas Natural"]
-seleccion = st.selectbox("Seleccioná el tipo de análisis:", opciones)
+mostrar_analisis_gas()
 
-if seleccion == "Gas Natural":
-    mostrar_analisis_gas()
-else:
-    st.info("📌 Seleccioná un análisis en el menú desplegable.")
 
 
 
