@@ -180,7 +180,7 @@ def mostrar_analisis_gas():
             datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
             comp = {}
             for k, v in datos.items():
-    nombre = alias.get(str(k).strip(), str(k).strip())
+             nombre = alias.get(str(k).strip(), str(k).strip())
 
                 if nombre in pcs_data:
                     comp[nombre] = float(v)
