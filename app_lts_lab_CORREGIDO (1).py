@@ -143,35 +143,15 @@ def formulario_analisis(nombre_modulo, parametros):
 # Módulo de GAS NATURAL
 def mostrar_analisis_gas():
     st.subheader("🛢️ Análisis de Gas Natural")
-    st.markdown("Subí el archivo CSV generado por el cromatógrafo co la composición en % molar.")
-    
-    # Fórmulas visibles
-    with st.expander("📘 ¿Qué se calcula?"):
-        st.latex(r"PCS = \sum_{i} x_i \cdot PCS_i")
-        st.latex(r"PCI = PCS - H_{vap} \cdot x_{CH_4}")
-        st.latex("PM_{gas} = \sum_{i} x_i \cdot PM_i")
-        st.latex(r"\rho_r = \frac{PM_{gas}}{28.964}")
-        st.latex(r"W = \frac{PCS}{\sqrt{\rho_r}}")
+    st.markdown("Subí el archivo CSV generado por el cromatógrafo con la composición en % molar.")
 
-    # Datos
-    pcs_data = {'CH4': 39.82, 'C2H6': 68.39, 'C3H8': 93.57, 'i-C4H10': 119.96, 'n-C4H10': 119.96, 'CO2': 0.0, 'N2': 0.0}
-    pm_data = {'CH4': 16.04, 'C2H6': 30.07, 'C3H8': 44.10, 'i-C4H10': 58.12, 'n-C4H10': 58.12, 'CO2': 44.01, 'N2': 28.01}
-    alias = {
-        "Metano": "CH4", "CH₄": "CH4", "C1": "CH4", "CH4": "CH4",
-        "Etano": "C2H6", "C2": "C2H6", "C2H6": "C2H6",
-        "Propano": "C3H8", "C3": "C3H8", "C3H8": "C3H8",
-        "i-Butano": "i-C4H10", "iC4": "i-C4H10",
-        "n-Butano": "n-C4H10", "nC4": "n-C4H10",
-        "Dióxido de carbono": "CO2", "CO2": "CO2",
-        "Nitrógeno": "N2", "N2": "N2"
-    }
-
-      archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
+    archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
     operador = st.text_input("👤 Operador (gas)")
     obs = st.text_area("Observaciones (gas)")
 
-
     if archivo:
+        ...
+
         try:
             df = pd.read_csv(archivo)
             st.dataframe(df)            datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
