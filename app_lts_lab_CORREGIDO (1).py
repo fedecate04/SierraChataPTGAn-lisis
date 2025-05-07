@@ -156,7 +156,8 @@ def mostrar_analisis_gas():
 
         try:
             df = pd.read_csv(archivo)
-            st.dataframe(df)            datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
+            st.dataframe(df)  
+            datos = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
             comp = {}
             for k, v in datos.items():
                 nombre = alias.get(k.strip(), k.strip())
