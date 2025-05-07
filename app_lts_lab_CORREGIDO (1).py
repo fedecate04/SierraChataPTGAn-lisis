@@ -177,9 +177,10 @@ def mostrar_analisis_gas():
             else:
                 resultados = {df.columns[0]: df.iloc[:, 0].values.tolist()}
             resultados["Explicación"] = (
-                "Poder Calorífico calculado como suma ponderada de componentes (ver GPA 2145). "
-                "Índice de Wobbe: W = HHV / √Densidad relativa."
-            )
+    "Poder Calorífico calculado como suma ponderada de componentes (ver GPA 2145). "
+    "Índice de Wobbe: W = HHV / raiz(Densidad relativa)."
+)
+
             generar_pdf(
                 nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 operador=operador,
