@@ -1,0 +1,5 @@
+Parámetro,Descripción,Fórmula
+HHV (MJ/mol),Energía total liberada por combustión completa de 1 mol de gas incluyendo la condensación del agua.,HHV = Σ(yᵢ · HHVᵢ)
+LHV estimado (MJ/mol),Energía útil descontando el calor de vaporización del agua. Estimado como HHV - 0.09.,LHV ≈ HHV - 0.09
+Índice de Wobbe (MJ/mol),Permite comparar gases para su uso en quemadores. W = HHV / sqrt(densidad relativa).,W = HHV / √ρrel
+Densidad relativa,Relación entre la densidad del gas y la del aire seco (adimensional).,ρrel = ρgas / ρaire
