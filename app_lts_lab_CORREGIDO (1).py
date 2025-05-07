@@ -6,13 +6,15 @@ from datetime import datetime
 import os
 from io import BytesIO
 from PIL import Image
+import re
 
 # Configuración de la página
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 
-# Mostrar logo en la cabecera
+# Mostrar logo
+LOGO_PATH = "logopetrogas.png"
 try:
-    logo = Image.open("logopetrogas.png")
+    logo = Image.open(LOGO_PATH)
     st.image(logo, width=180)
 except Exception as e:
     st.warning(f"⚠️ No se pudo cargar el logo: {e}")
@@ -26,11 +28,11 @@ Sistema profesional de análisis y validación de laboratorio con informes PDF p
 Garantizar que los fluidos cumplan con las especificaciones evita corrosión, fallas operativas y asegura la eficiencia de la planta LTS.
 """)
 
-# Opciones en barra lateral
+# Sidebar
 st.sidebar.header("⚙️ Opciones")
 activar_validaciones = st.sidebar.checkbox("Activar validación de rangos", value=True)
 
-# Configuración de parámetros por módulo
+# Parámetros configurables
 PARAMETROS_CONFIG = {
     "MEG": [
         {"nombre": "pH", "unidad": "", "min": 6, "max": 8},
@@ -57,14 +59,20 @@ PARAMETROS_CONFIG = {
     ]
 }
 
-LOGO_PATH = "logopetrogas.png"
+# Crear carpetas de informes
 for carpeta in PARAMETROS_CONFIG:
     os.makedirs(f"informes/{carpeta.lower().replace(' ', '_')}", exist_ok=True)
 os.makedirs("informes/gas_natural", exist_ok=True)
 
+# Limpieza de texto
 def limpiar_texto(texto):
-    return str(texto).replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
+    texto = str(texto)
+    texto = texto.replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
+    texto = texto.replace("√", "sqrt")  # conversión segura
+    texto = re.sub(r'[^\x00-\xFF]', '', texto)  # solo caracteres latin-1
+    return texto
 
+# Clase para generar PDF
 class PDF(FPDF):
     def header(self):
         if os.path.exists(LOGO_PATH):
@@ -101,6 +109,7 @@ class PDF(FPDF):
         self.multi_cell(0, 8, f"Observaciones: {limpiar_texto(texto)}")
         self.ln(3)
 
+# Validación y lógica
 def validar_parametro(valor, minimo, maximo):
     if valor is None:
         return "—"
@@ -125,7 +134,7 @@ def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta)
     pdf.add_results(resultados)
     pdf.add_observaciones(obs)
     ruta = os.path.join(f"informes/{carpeta}", nombre_archivo)
-    pdf_bytes = pdf.output(dest="S").encode("latin1", errors="ignore")
+    pdf_bytes = pdf.output(dest="S").encode("latin-1", errors="replace")
     with open(ruta, "wb") as f:
         f.write(pdf_bytes)
     st.download_button("⬇️ Descargar informe PDF", BytesIO(pdf_bytes), nombre_archivo, mime="application/pdf")
@@ -159,6 +168,7 @@ def formulario_analisis(nombre_modulo, parametros):
             carpeta=nombre_modulo.lower().replace(' ', '_')
         )
 
+# Menú principal
 st.session_state.analisis_actual = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"], key="tipo_analisis")
 
 if st.session_state.analisis_actual in PARAMETROS_CONFIG:
@@ -184,7 +194,7 @@ elif st.session_state.analisis_actual == "Gas Natural":
                 resultados = df.set_index(df.columns[0]).iloc[:, 0].apply(lambda x: str(x)).to_dict()
             else:
                 resultados = {df.columns[0]: [str(x) for x in df.iloc[:, 0].values]}
-            resultados["Explicación"] = "Poder Calorífico calculado como suma ponderada de componentes (ver GPA 2145). Índice de Wobbe: W = HHV / √Densidad relativa."
+            resultados["Explicación"] = "Poder Calorífico calculado como suma ponderada de componentes (ver GPA 2145). Índice de Wobbe: W = HHV / sqrt(Densidad relativa)."
             generar_pdf(
                 nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 operador=operador,
