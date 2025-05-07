@@ -63,7 +63,7 @@ for carpeta in PARAMETROS_CONFIG:
 os.makedirs("informes/gas_natural", exist_ok=True)
 
 def limpiar_texto(texto):
-    return texto.replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
+    return str(texto).replace("–", "-").replace("—", "-").replace("“", '"').replace("”", '"')
 
 class PDF(FPDF):
     def header(self):
@@ -159,18 +159,12 @@ def formulario_analisis(nombre_modulo, parametros):
             carpeta=nombre_modulo.lower().replace(' ', '_')
         )
 
-if "analisis_actual" not in st.session_state:
-    st.session_state.analisis_actual = "-- Seleccionar --"
+st.session_state.analisis_actual = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"], key="tipo_analisis")
 
-analisis_nuevo = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"], key="tipo_analisis")
+if st.session_state.analisis_actual in PARAMETROS_CONFIG:
+    formulario_analisis(st.session_state.analisis_actual, PARAMETROS_CONFIG[st.session_state.analisis_actual])
 
-st.session_state.analisis_actual = analisis_nuevo
-
-
-if analisis_nuevo in PARAMETROS_CONFIG:
-    formulario_analisis(analisis_nuevo, PARAMETROS_CONFIG[analisis_nuevo])
-
-elif analisis_nuevo == "Gas Natural":
+elif st.session_state.analisis_actual == "Gas Natural":
     st.subheader("🛢️ Análisis de Gas Natural")
     try:
         logo = Image.open(LOGO_PATH)
@@ -187,9 +181,9 @@ elif analisis_nuevo == "Gas Natural":
             df = pd.read_csv(archivo)
             st.dataframe(df)
             if df.shape[1] >= 2:
-                resultados = df.set_index(df.columns[0]).iloc[:, 0].to_dict()
+                resultados = df.set_index(df.columns[0]).iloc[:, 0].apply(lambda x: str(x)).to_dict()
             else:
-                resultados = {df.columns[0]: df.iloc[:, 0].values.tolist()}
+                resultados = {df.columns[0]: [str(x) for x in df.iloc[:, 0].values]}
             resultados["Explicación"] = "Poder Calorífico calculado como suma ponderada de componentes (ver GPA 2145). Índice de Wobbe: W = HHV / √Densidad relativa."
             generar_pdf(
                 nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
