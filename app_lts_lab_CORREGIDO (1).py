@@ -289,7 +289,6 @@ A partir del archivo de cromatografía, se calculan automáticamente:
                 st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
 
             try:
-    ...
     st.markdown("### 📘 Tabla explicativa de parámetros")
 
     st.dataframe(pd.DataFrame({
