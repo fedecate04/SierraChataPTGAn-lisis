@@ -218,12 +218,27 @@ A partir del archivo de cromatografía, se calculan automáticamente:
             st.success("✅ Archivo cargado correctamente")
             st.dataframe(df)
 
-            # Supongamos que el CSV tiene las columnas: Componente, %mol
+            # Mapeo de nombres comunes a abreviaturas
+            nombre_mapeo = {
+                'Metano': 'CH4', 'CH4': 'CH4',
+                'Etano': 'C2H6', 'C2H6': 'C2H6',
+                'Propano': 'C3H8', 'C3H8': 'C3H8',
+                'n-Butano': 'n-C4H10', 'i-Butano': 'i-C4H10',
+                'CO2': 'CO2',
+                'N2': 'N2'
+            }
+
             comp_col = df.columns[0]
             frac_col = df.columns[1]
-            composicion = df.set_index(comp_col)[frac_col] / 100  # convertir a fracción molar
+            composicion_raw = df.set_index(comp_col)[frac_col]
 
-            # Valores de HHV [MJ/mol] y densidad relativa aprox.
+            # Normalizar nombres
+            composicion = {}
+            for nombre, valor in composicion_raw.items():
+                clave = nombre_mapeo.get(nombre.strip(), None)
+                if clave:
+                    composicion[clave] = composicion.get(clave, 0) + valor / 100  # fracción molar
+
             HHV_MJ = {
                 'CH4': 0.889,
                 'C2H6': 1.564,
@@ -243,11 +258,10 @@ A partir del archivo de cromatografía, se calculan automáticamente:
                 'N2': 0.97
             }
 
-            # Calcular HHV y densidad relativa
-            hhv = sum(composicion.get(c, 0) * HHV_MJ.get(c, 0) for c in composicion.index)
-            rho_rel = sum(composicion.get(c, 0) * dens_rel.get(c, 1) for c in composicion.index)
-            wobbe = hhv / np.sqrt(rho_rel)
-            lhv = hhv - 0.09  # estimado para mostrar valor
+            hhv = sum(composicion.get(c, 0) * HHV_MJ.get(c, 0) for c in composicion)
+            rho_rel = sum(composicion.get(c, 0) * dens_rel.get(c, 1) for c in composicion)
+            wobbe = hhv / np.sqrt(rho_rel) if rho_rel > 0 else 0
+            lhv = hhv - 0.09  # estimado
 
             resultados = {
                 "HHV (MJ/mol)": round(hhv, 4),
@@ -256,17 +270,57 @@ A partir del archivo de cromatografía, se calculan automáticamente:
                 "Densidad relativa": round(rho_rel, 4)
             }
 
-            st.markdown("### 📊 Resultados calculados:")
-            st.table(resultados)
+            # Mostrar fórmulas
+            st.markdown("### 📘 Parámetros calculados y fórmulas")
+            st.latex("HHV = \\sum y_i \\cdot HHV_i")
+            st.latex("W = \\frac{HHV}{\\sqrt{\\rho_{rel}}}")
+            st.latex("LHV \\approx HHV - 0.09")
+
+            # Mostrar tabla con definiciones
+            explicaciones = {
+                "HHV (MJ/mol)": "Energía total liberada al quemar 1 mol de gas, incluyendo condensación de H₂O.",
+                "LHV estimado (MJ/mol)": "HHV menos el calor latente de vaporización del agua (estimado).",
+                "Índice de Wobbe (MJ/mol)": "Relación entre HHV y raíz de densidad relativa, clave para intercambiabilidad.",
+                "Densidad relativa": "Relación entre densidad del gas y la del aire (valor adimensional)."
+            }
+
+            st.markdown("### 📊 Resultados:")
+            for k, v in resultados.items():
+                st.markdown(f"**{k}:** {v} — _{explicaciones[k]}_")
+
+            st.markdown("### 📘 Tabla explicativa de parámetros")
+
+st.dataframe(pd.DataFrame({
+    "Parámetro": [
+        "HHV (MJ/mol)",
+        "LHV estimado (MJ/mol)",
+        "Índice de Wobbe (MJ/mol)",
+        "Densidad relativa"
+    ],
+    "Descripción": [
+        "Energía total liberada por combustión completa de 1 mol de gas incluyendo la condensación del agua.",
+        "Energía útil descontando el calor de vaporización del agua. Estimado como HHV - 0.09.",
+        "Permite comparar gases para su uso en quemadores. W = HHV / sqrt(densidad relativa).",
+        "Relación entre la densidad del gas y la del aire seco (adimensional)."
+    ],
+    "Fórmula": [
+        "HHV = Σ(yᵢ · HHVᵢ)",
+        "LHV ≈ HHV - 0.09",
+        "W = HHV / √ρrel",
+        "ρrel = ρgas / ρaire"
+    ]
+}))
+
 
             generar_pdf(
                 nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 operador=operador,
-                explicacion="Análisis composicional del gas natural. Cálculos según GPA 2145 / ISO 6976.",
+                explicacion="Análisis composicional del gas natural. Se calculan HHV, LHV, Wobbe y densidad relativa con base en GPA 2145 e ISO 6976. Fórmulas utilizadas: HHV = Σ(y_i·HHV_i), W = HHV / √ρ_rel, LHV ≈ HHV - 0.09",
                 resultados=resultados,
                 obs=obs,
                 carpeta="gas_natural"
             )
+
 
         except Exception as e:
             st.error(f"❌ Error al procesar el archivo: {e}")
