@@ -112,11 +112,15 @@ PARAMETROS_CONFIG = {
     ]
 }
 
-# Menú de selección
-analisis = st.selectbox("Seleccioná el tipo de análisis:", ["-- Seleccionar --"] + list(PARAMETROS_CONFIG.keys()) + ["Gas Natural"])
+# Menú principal de selección
+opciones = ["-- Seleccionar --", "Gas Natural"]
+seleccion = st.selectbox("Seleccioná el tipo de análisis:", opciones)
 
-if analisis != "-- Seleccionar --":
-    st.session_state["tipo_analisis"] = analisis
+if seleccion == "Gas Natural":
+    mostrar_analisis_gas()
+else:
+    st.info("📌 Seleccioná un análisis en el menú desplegable.")
+
 
 import streamlit as st
 import pandas as pd
@@ -242,15 +246,8 @@ def mostrar_analisis_gas():
 opciones = ["-- Seleccionar --", "Gas Natural"]
 seleccion = st.selectbox("Seleccioná el tipo de análisis:", opciones)
 
-if seleccion == "Gas Natural":
-    mostrar_analisis_gas()
-else:
-    st.info("📌 Seleccioná un análisis en el menú desplegable.")
+mostrar_analisis_gas()
 
-if seleccion == "Gas Natural":
-    mostrar_analisis_gas()
-else:
-    st.info("📌 Seleccioná un análisis en el menú desplegable.")
 
 
 
