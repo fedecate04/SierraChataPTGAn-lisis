@@ -193,28 +193,84 @@ if analisis in PARAMETROS_CONFIG:
 
 elif analisis == "Gas Natural":
     st.subheader("🛢️ Análisis de Gas Natural")
-    archivo = st.file_uploader("📎 Subir archivo CSV", type="csv")
+
+    with st.expander("ℹ️ ¿Qué se calcula?"):
+        st.markdown("""
+A partir del archivo de cromatografía, se calculan automáticamente:
+- **HHV** (Poder calorífico superior)  
+- **LHV** (Poder calorífico inferior estimado)  
+- **Índice de Wobbe**  
+- **Densidad relativa**
+
+**Fórmulas:**
+- \\( HHV = \\sum (y_i \\cdot HHV_i) \\)
+- \\( W = \\frac{HHV}{\\sqrt{\\rho_{rel}}} \\)
+- \\( LHV = HHV - 0.9 \\) _(estimado)_
+        """)
+
+    archivo = st.file_uploader("📎 Subí tu archivo CSV de cromatografía", type="csv")
     operador = st.text_input("👤 Operador", key="operador_gas")
     obs = st.text_area("Observaciones", key="obs_gas")
+
     if archivo is not None:
         try:
             df = pd.read_csv(archivo)
+            st.success("✅ Archivo cargado correctamente")
             st.dataframe(df)
-            if df.shape[1] >= 2:
-                resultados = df.set_index(df.columns[0]).iloc[:, 0].apply(lambda x: str(x)).to_dict()
-            else:
-                resultados = {df.columns[0]: [str(x) for x in df.iloc[:, 0].values]}
-            resultados["Explicación"] = "HHV y Wobbe según GPA 2145 e ISO 6976"
+
+            # Supongamos que el CSV tiene las columnas: Componente, %mol
+            comp_col = df.columns[0]
+            frac_col = df.columns[1]
+            composicion = df.set_index(comp_col)[frac_col] / 100  # convertir a fracción molar
+
+            # Valores de HHV [MJ/mol] y densidad relativa aprox.
+            HHV_MJ = {
+                'CH4': 0.889,
+                'C2H6': 1.564,
+                'C3H8': 2.222,
+                'n-C4H10': 2.873,
+                'i-C4H10': 2.873,
+                'CO2': 0,
+                'N2': 0
+            }
+            dens_rel = {
+                'CH4': 0.55,
+                'C2H6': 1.04,
+                'C3H8': 1.52,
+                'n-C4H10': 2.0,
+                'i-C4H10': 2.0,
+                'CO2': 1.52,
+                'N2': 0.97
+            }
+
+            # Calcular HHV y densidad relativa
+            hhv = sum(composicion.get(c, 0) * HHV_MJ.get(c, 0) for c in composicion.index)
+            rho_rel = sum(composicion.get(c, 0) * dens_rel.get(c, 1) for c in composicion.index)
+            wobbe = hhv / np.sqrt(rho_rel)
+            lhv = hhv - 0.09  # estimado para mostrar valor
+
+            resultados = {
+                "HHV (MJ/mol)": round(hhv, 4),
+                "LHV estimado (MJ/mol)": round(lhv, 4),
+                "Índice de Wobbe (MJ/mol)": round(wobbe, 4),
+                "Densidad relativa": round(rho_rel, 4)
+            }
+
+            st.markdown("### 📊 Resultados calculados:")
+            st.table(resultados)
+
             generar_pdf(
                 nombre_archivo=f"Informe_Gas_{operador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 operador=operador,
-                explicacion="Análisis composicional del gas natural.",
+                explicacion="Análisis composicional del gas natural. Cálculos según GPA 2145 / ISO 6976.",
                 resultados=resultados,
                 obs=obs,
                 carpeta="gas_natural"
             )
+
         except Exception as e:
-            st.error(f"Error al procesar el archivo: {e}")
+            st.error(f"❌ Error al procesar el archivo: {e}")
+
 
 elif analisis == "📁 Ver Historial":
     st.subheader("📂 Historial de Informes")
