@@ -10,9 +10,14 @@ from io import BytesIO
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 
 # Logo en la cabecera (modo seguro)
+from PIL import Image
+
 try:
-    with open("logopetrogas.png", "rb") as f:
-        st.image(f, width=180)
+    logo = Image.open("logopetrogas.png")
+    st.image(logo, width=180)
+except Exception as e:
+    st.warning("⚠️ No se pudo cargar el logo: logopetrogas.png")
+
 except FileNotFoundError:
     st.warning("⚠️ No se encontró el logo 'logopetrogas.png'")
 
