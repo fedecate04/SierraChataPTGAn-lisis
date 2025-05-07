@@ -11,10 +11,10 @@ st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
 
 # Logo en la cabecera (modo seguro)
 try:
-    with open("LOGO PETROGAS.PNG", "rb") as f:
+    with open("logopetrogas.png", "rb") as f:
         st.image(f, width=180)
 except FileNotFoundError:
-    st.warning("⚠️ No se encontró el logo 'LOGO PETROGAS.PNG'")
+    st.warning("⚠️ No se encontró el logo 'logopetrogas.png'")
 
 st.title("🧪 Laboratorio de Planta LTS")
 
@@ -56,7 +56,7 @@ PARAMETROS_CONFIG = {
     ]
 }
 
-LOGO_PATH = "LOGO PETROGAS.PNG"
+LOGO_PATH = "logopetrogas.png"
 for carpeta in PARAMETROS_CONFIG:
     os.makedirs(f"informes/{carpeta.lower().replace(' ', '_')}", exist_ok=True)
 os.makedirs("informes/gas_natural", exist_ok=True)
