@@ -15,31 +15,45 @@ st.markdown("""
     <style>
         .stApp {
             background-color: #0d1117;
-            color: #ffffff;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         input, textarea, .stTextInput, .stTextArea, .stNumberInput, .stSelectbox, .stDownloadButton, .stFileUploader {
-            background-color: #0d1117 !important;
-            color: white !important;
-            border: 1px solid #00f0ff !important;
-            box-shadow: 0 0 8px #00f0ff !important;
-            border-radius: 8px;
+            background-color: #1e2228 !important;
+            color: #e0e0e0 !important;
+            border: 1px solid #5a5f66 !important;
+            border-radius: 6px;
+            padding: 0.3rem;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
         }
 
         button {
-            background-color: #00f0ff !important;
+            background-color: #0078D7 !important;
+            color: white !important;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 0.4rem 1rem;
+            box-shadow: 1px 1px 5px rgba(0,0,0,0.2);
+        }
+
+        .stSelectbox > div {
             color: black !important;
-            font-weight: bold;
-            border-radius: 8px;
-            box-shadow: 0 0 8px #00f0ff !important;
         }
 
         .logo-container {
             text-align: center;
             margin-bottom: 1rem;
         }
+
+        .stTitle {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #58a6ff;
+        }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Logo
 def cargar_logo_base64(path):
