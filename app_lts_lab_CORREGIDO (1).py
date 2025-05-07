@@ -6,24 +6,46 @@ from io import BytesIO
 from fpdf import FPDF
 import unicodedata
 import os
+import base64
 
-# Configuración
+# Configuración inicial
 st.set_page_config(page_title="LTS Lab Analyzer", layout="wide")
-LOGO_PATH = "logopetrogas.png"
 
-# Mostrar logo
+# Estilos: color de fondo
+st.markdown("""
+    <style>
+        .stApp {
+            background-color: #f0f4f7;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Convertir logo a base64 y centrarlo
+def cargar_logo_base64(path):
+    with open(path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
 try:
-    with open(LOGO_PATH, "rb") as logo_file:
-        st.image(logo_file.read(), width=180)
+    base64_logo = cargar_logo_base64("logopetrogas.png")
+    st.markdown(
+        f"""
+        <div style="text-align:center;">
+            <img src="data:image/png;base64,{base64_logo}" width="180">
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 except:
     st.warning("⚠️ No se pudo cargar el logo.")
 
+# Título e introducción
 st.title("🧪 Laboratorio de Planta LTS")
 st.markdown("Sistema profesional de análisis y validación de laboratorio con informes PDF.")
 
-# Sidebar
+# Sidebar de opciones
 st.sidebar.header("⚙️ Opciones")
 activar_validaciones = st.sidebar.checkbox("Activar validación de rangos", value=True)
+
 
 # Parámetros de los módulos físico-químicos
 PARAMETROS_CONFIG = {
