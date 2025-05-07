@@ -120,7 +120,7 @@ def generar_pdf(nombre_archivo, operador, explicacion, resultados, obs, carpeta)
 # Formulario para módulos físico-químicos
 def formulario_analisis(nombre_modulo, parametros):
     st.subheader(f"🔬 Análisis de {nombre_modulo}")
-    valores  []
+    valores = []
     for param in parametros:
         label = param["nombre"]
         unidad_sel = param["unidad"]
