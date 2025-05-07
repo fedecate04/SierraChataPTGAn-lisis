@@ -205,3 +205,4 @@ elif st.session_state.analisis_actual == "Gas Natural":
 
 
 
+
